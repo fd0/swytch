@@ -1,0 +1,3 @@
+i3ipc:
+    fork https://github.com/emcconville/i3ipc-go, branch sway_support
+    needed until https://github.com/mdirkse/i3ipc-go/pull/9 is merged
