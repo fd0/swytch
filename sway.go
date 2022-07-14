@@ -12,12 +12,9 @@ type Window struct {
 	Program   string
 	Title     string
 	Workspace string
+	Active    bool
 
 	ID int64
-}
-
-func (w Window) String() string {
-	return fmt.Sprintf("[%s]\t%s\t%s", w.Workspace, w.Program, w.Title)
 }
 
 func getAllWindows(socket *i3ipc.IPCSocket) ([]Window, error) {
@@ -42,6 +39,7 @@ func getAllWindows(socket *i3ipc.IPCSocket) ([]Window, error) {
 			Title:     node.Name,
 			Program:   program,
 			Workspace: strings.Split(node.Workspace().Name, ":")[0],
+			Active:    node.Focused,
 
 			ID: node.ID,
 		}

@@ -51,8 +51,6 @@ func run(args []string) error {
 	}
 
 	// build menu
-	fmt.Fprintf(os.Stderr, "startup, show rofi menu\n")
-
 	socket, err := i3ipc.GetIPCSocket()
 	if err != nil {
 		return fmt.Errorf("connect window manager: %w", err)
@@ -68,13 +66,26 @@ func run(args []string) error {
 		Prompt:     "window",
 		NoCustom:   true,
 		UseHotKeys: true,
+		MarkupRows: true,
 	}
 
 	fmt.Print(opts.ConfigString())
 
-	for _, window := range windows {
+	colors := []string{"blue", "green", "orange", "red", "magenta"}
+
+	for i, window := range windows {
+		color := colors[i%len(colors)]
+
+		active := ""
+		if window.Active {
+			active = ` font_weight="bold"`
+		}
+
+		text := fmt.Sprintf("<span foreground=%q>[%s]</span>", color, window.Workspace)
+		text += fmt.Sprintf("\t<span%s>%s\t%s</span>", active, window.Program, window.Title)
+
 		row := Row{
-			Text: window.String(),
+			Text: text,
 			Info: fmt.Sprintf("%d", window.ID),
 		}
 		fmt.Print(row.ConfigString())
