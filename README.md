@@ -4,6 +4,8 @@ This program is a replacement for the window selection built into rofi, which
 does not work with Sway. It extracts the windows via `swaymsg` instead of
 querying the X server.
 
+It is inspired by [`swytch.sh`](https://github.com/wilecoyote2015/Swytch/blob/master/swytch.sh),
+but implemented in Go instead of Shell for speed.
 
 ## Building
 
