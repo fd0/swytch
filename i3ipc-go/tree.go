@@ -22,6 +22,7 @@ type I3Node struct {
 	//int32 isn't large enough to hold all the ids
 	ID                 int64
 	Name               string
+	AppID              string `json:"app_id"`
 	Type               string
 	Border             string
 	CurrentBorderWidth int32 `json:"current_border_width"`
