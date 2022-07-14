@@ -12,7 +12,13 @@ but implemented in Go instead of Shell for speed.
 Install Go, then run `go build`.
 
 
-## Dependency
+## Keybindings
+
+ * `Return` switches focus to the window
+ * `Shift+Return` moves the window to the current workspace
+ * `Control+C` kill the window
+
+# Dependency
 
 It includes a fork of the library `i3ipc-go` from [here](https://github.com/emcconville/i3ipc-go)
 (branch `sway_support`) for Sway support (at least until

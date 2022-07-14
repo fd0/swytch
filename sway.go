@@ -73,3 +73,15 @@ func MoveWindowToCurrentWorkspace(id string) error {
 
 	return nil
 }
+
+func KillWindow(id string) error {
+	selector := fmt.Sprintf("[con_id=%s]", id)
+	cmd := exec.Command("swaymsg", selector, "kill")
+
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("kill window: %w", err)
+	}
+
+	return nil
+}

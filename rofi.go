@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-func RunRofi() error {
+func RunRofi(additionalEnvironment ...string) error {
 	program, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("find executable: %w", err)
@@ -15,7 +15,9 @@ func RunRofi() error {
 	cmd := exec.Command("rofi", "-modi", "swytch:"+program, "-show", "swytch",
 		"-kb-accept-alt", "", // disable alternative accept
 		"-kb-custom-1", "Shift+Return", // set custom keybinding 1 to shift+return
+		"-kb-custom-2", "Control+c", // kill window
 	)
+	cmd.Env = append(os.Environ(), additionalEnvironment...)
 	cmd.Stderr = os.Stderr
 
 	err = cmd.Run()

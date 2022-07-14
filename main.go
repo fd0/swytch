@@ -4,22 +4,43 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/mdirkse/i3ipc-go"
+	"github.com/spf13/pflag"
 )
 
+type Options struct {
+	WorkspaceColors []string
+}
+
 func main() {
-	err := run(os.Args)
+	var opts Options
+
+	flags := pflag.NewFlagSet("swytch", pflag.ExitOnError)
+	flags.StringSliceVar(&opts.WorkspaceColors, "workspace-colors", []string{"lightblue", "lightgreen", "orange", "red", "magenta", "cyan"}, "Use workspace `color`")
+
+	err := flags.Parse(os.Args)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "parse flags: %v\n", err)
+		os.Exit(10)
+	}
+
+	if v, ok := os.LookupEnv("SWYTCH_WORKSPACE_COLORS"); ok {
+		opts.WorkspaceColors = strings.Split(v, ",")
+	}
+
+	err = run(opts, flags.Args())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(10)
+		os.Exit(11)
 	}
 }
 
-func run(args []string) error {
+func run(opts Options, args []string) error {
 	if _, ok := os.LookupEnv("ROFI_RETV"); !ok {
 		// just run rofi with the right parameters
-		return RunRofi()
+		return RunRofi("SWYTCH_WORKSPACE_COLORS=" + strings.Join(opts.WorkspaceColors, ","))
 	}
 
 	retv, err := strconv.Atoi(os.Getenv("ROFI_RETV"))
@@ -30,9 +51,9 @@ func run(args []string) error {
 	info := os.Getenv("ROFI_INFO")
 
 	// called by rofi
-	if len(args) > 1 {
+	if info != "" {
 		// item selected
-		fmt.Fprintf(os.Stderr, "startup, selected item by rofi via %v (%v): %v\n", retv, info, args[1])
+		fmt.Fprintf(os.Stderr, "startup, selected item %v (%v) by rofi: %v\n", info, retv, args[1])
 
 		switch retv {
 		case 1:
@@ -44,6 +65,11 @@ func run(args []string) error {
 			fmt.Fprintf(os.Stderr, "move window %v to current workspace\n", info)
 
 			return MoveWindowToCurrentWorkspace(info)
+
+		case 11:
+			fmt.Fprintf(os.Stderr, "kill window %v\n", info)
+
+			return KillWindow(info)
 
 		default:
 			return fmt.Errorf("unknown keyboard shortcut %v received from rofi via $ROFI_RETV", retv)
@@ -62,31 +88,29 @@ func run(args []string) error {
 	}
 
 	// configure rofi
-	opts := DisplayOptions{
+	dispOpts := DisplayOptions{
 		Prompt:     "window",
 		NoCustom:   true,
 		UseHotKeys: true,
 		MarkupRows: true,
 	}
 
-	fmt.Print(opts.ConfigString())
+	fmt.Print(dispOpts.ConfigString())
 
-	colors := []string{"blue", "green", "orange", "red", "magenta"}
-
-	for i, window := range windows {
-		color := colors[i%len(colors)]
+	for i, w := range windows {
+		color := opts.WorkspaceColors[i%len(opts.WorkspaceColors)]
 
 		active := ""
-		if window.Active {
+		if w.Active {
 			active = ` font_weight="bold"`
 		}
 
-		text := fmt.Sprintf("<span foreground=%q>[%s]</span>", color, window.Workspace)
-		text += fmt.Sprintf("\t<span%s>%s\t%s</span>", active, window.Program, window.Title)
+		text := fmt.Sprintf("<span foreground=%q>[%s]</span>", color, w.Workspace)
+		text += fmt.Sprintf("\t<span%s>%s\t%s</span>", active, w.Program, w.Title)
 
 		row := Row{
 			Text: text,
-			Info: fmt.Sprintf("%d", window.ID),
+			Info: fmt.Sprintf("%d", w.ID),
 		}
 		fmt.Print(row.ConfigString())
 	}
