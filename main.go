@@ -97,8 +97,16 @@ func run(opts Options, args []string) error {
 
 	fmt.Print(dispOpts.ConfigString())
 
-	for i, w := range windows {
-		color := opts.WorkspaceColors[i%len(opts.WorkspaceColors)]
+	workspace := ""
+	color := ""
+	colorIndex := 0
+
+	for _, w := range windows {
+		if w.Workspace != workspace {
+			color = opts.WorkspaceColors[colorIndex%len(opts.WorkspaceColors)]
+			colorIndex++
+			workspace = w.Workspace
+		}
 
 		active := ""
 		if w.Active {
