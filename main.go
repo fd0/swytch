@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"os"
 	"strconv"
 	"strings"
@@ -113,8 +114,8 @@ func run(opts Options, args []string) error {
 			active = ` font_weight="bold"`
 		}
 
-		text := fmt.Sprintf("<span foreground=%q>[%s]</span>", color, w.Workspace)
-		text += fmt.Sprintf("\t<span%s>%s\t%s</span>", active, w.Program, w.Title)
+		text := fmt.Sprintf("<span foreground=%q>[%s]</span>", color, html.EscapeString(w.Workspace))
+		text += fmt.Sprintf("\t<span%s>%s\t%s</span>", active, html.EscapeString(w.Program), html.EscapeString(w.Title))
 
 		row := Row{
 			Text: text,
