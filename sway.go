@@ -25,7 +25,20 @@ func getAllWindows(socket *i3ipc.IPCSocket) ([]Window, error) {
 
 	windows := []Window{}
 
+	// collect all windows, floating and regular, ignore scratchpad
+	nodes := make([]i3ipc.I3Node, 0, len(root.Leaves())+len(root.Floating_Nodes))
+
+	// collect regular windows
 	for _, node := range root.Leaves() {
+		nodes = append(nodes, *node)
+	}
+
+	// collect floating windows for all workspaces
+	for _, workspace := range root.Workspaces() {
+		nodes = append(nodes, workspace.Floating_Nodes...)
+	}
+
+	for _, node := range nodes {
 		if node.Name == "" {
 			continue
 		}
