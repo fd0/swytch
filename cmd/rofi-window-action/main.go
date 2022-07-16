@@ -1,11 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/mdirkse/i3ipc-go"
 	"github.com/spf13/pflag"
@@ -29,8 +29,13 @@ func main() {
 		os.Exit(10)
 	}
 
-	if v, ok := os.LookupEnv("SWYTCH_WORKSPACE_COLORS"); ok {
-		opts.WorkspaceColors = strings.Split(v, ",")
+	// get opts from environment if passed from there, overrides cli flags
+	if v, ok := os.LookupEnv("ROFI_WINDOW_ACTION_OPTS"); ok {
+		err = json.Unmarshal([]byte(v), &opts)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "json decode opts from $ROFI_WINDOW_ACTION_OPTS: %v\n", err)
+			os.Exit(12)
+		}
 	}
 
 	err = run(opts, flags.Args())
@@ -42,8 +47,13 @@ func main() {
 
 func run(opts Options, args []string) error {
 	if _, ok := os.LookupEnv("ROFI_RETV"); !ok {
-		// just run rofi with the right parameters
-		return RunRofi("SWYTCH_WORKSPACE_COLORS=" + strings.Join(opts.WorkspaceColors, ","))
+		// just run rofi with the right parameters, pass all opts as json in environment
+		buf, err := json.Marshal(opts)
+		if err != nil {
+			return fmt.Errorf("json encode: %w", err)
+		}
+
+		return RunRofi("ROFI_WINDOW_ACTION_OPTS=" + string(buf))
 	}
 
 	retv, err := strconv.Atoi(os.Getenv("ROFI_RETV"))
@@ -57,7 +67,7 @@ func run(opts Options, args []string) error {
 	if info != "" {
 		// item selected
 		if opts.Debug {
-			fmt.Fprintf(os.Stderr, "startup, selected item %v (%v) by rofi: %v\n", info, retv, args[1])
+			fmt.Fprintf(os.Stderr, "selected item %v (%v) by rofi: %v\n", info, retv, args[1])
 		}
 
 		switch retv {
