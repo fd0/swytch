@@ -13,6 +13,7 @@ import (
 
 type Options struct {
 	WorkspaceColors []string
+	Debug           bool
 }
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
 
 	flags := pflag.NewFlagSet("swytch", pflag.ExitOnError)
 	flags.StringSliceVar(&opts.WorkspaceColors, "workspace-colors", []string{"lightblue", "lightgreen", "orange", "red", "magenta", "cyan"}, "Use workspace `color`")
+	flags.BoolVar(&opts.Debug, "debug", false, "Print debug messages")
 
 	err := flags.Parse(os.Args)
 	if err != nil {
@@ -54,21 +56,29 @@ func run(opts Options, args []string) error {
 	// called by rofi
 	if info != "" {
 		// item selected
-		fmt.Fprintf(os.Stderr, "startup, selected item %v (%v) by rofi: %v\n", info, retv, args[1])
+		if opts.Debug {
+			fmt.Fprintf(os.Stderr, "startup, selected item %v (%v) by rofi: %v\n", info, retv, args[1])
+		}
 
 		switch retv {
 		case 1:
-			fmt.Fprintf(os.Stderr, "focus window %v\n", info)
+			if opts.Debug {
+				fmt.Fprintf(os.Stderr, "focus window %v\n", info)
+			}
 
 			return FocusWindow(info)
 
 		case 10:
-			fmt.Fprintf(os.Stderr, "move window %v to current workspace\n", info)
+			if opts.Debug {
+				fmt.Fprintf(os.Stderr, "move window %v to current workspace\n", info)
+			}
 
 			return MoveWindowToCurrentWorkspace(info)
 
 		case 11:
-			fmt.Fprintf(os.Stderr, "kill window %v\n", info)
+			if opts.Debug {
+				fmt.Fprintf(os.Stderr, "kill window %v\n", info)
+			}
 
 			return KillWindow(info)
 
