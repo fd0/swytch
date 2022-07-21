@@ -1,18 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 )
 
-func RunRofi(additionalEnvironment ...string) error {
+func RunRofi(ctx context.Context, additionalEnvironment ...string) error {
 	program, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("find executable: %w", err)
 	}
 
-	cmd := exec.Command("rofi", "-modi", "swytch:"+program, "-show", "swytch",
+	cmd := exec.CommandContext(ctx,
+		"rofi", "-modi", "swytch:"+program, "-show", "swytch",
 		"-kb-accept-alt", "", // disable alternative accept
 		"-kb-custom-1", "Shift+Return", // set custom keybinding 1 to shift+return
 		"-kb-custom-2", "Control+c", // kill window

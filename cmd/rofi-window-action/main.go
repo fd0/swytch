@@ -1,13 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
 	"os"
 	"strconv"
 
-	"github.com/mdirkse/i3ipc-go"
+	"github.com/joshuarubin/go-sway"
 	"github.com/spf13/pflag"
 )
 
@@ -38,14 +39,17 @@ func main() {
 		}
 	}
 
-	err = run(opts, flags.Args())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = run(ctx, opts, flags.Args())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(11)
 	}
 }
 
-func run(opts Options, args []string) error {
+func run(ctx context.Context, opts Options, args []string) error {
 	if _, ok := os.LookupEnv("ROFI_RETV"); !ok {
 		// just run rofi with the right parameters, pass all opts as json in environment
 		buf, err := json.Marshal(opts)
@@ -53,7 +57,7 @@ func run(opts Options, args []string) error {
 			return fmt.Errorf("json encode: %w", err)
 		}
 
-		return RunRofi("ROFI_WINDOW_ACTION_OPTS=" + string(buf))
+		return RunRofi(ctx, "ROFI_WINDOW_ACTION_OPTS="+string(buf))
 	}
 
 	retv, err := strconv.Atoi(os.Getenv("ROFI_RETV"))
@@ -98,12 +102,12 @@ func run(opts Options, args []string) error {
 	}
 
 	// build menu
-	socket, err := i3ipc.GetIPCSocket()
+	client, err := sway.New(ctx)
 	if err != nil {
 		return fmt.Errorf("connect window manager: %w", err)
 	}
 
-	windows, err := getAllWindows(socket)
+	windows, err := getAllWindows(ctx, client)
 	if err != nil {
 		return fmt.Errorf("get windows: %w", err)
 	}
